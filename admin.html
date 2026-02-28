@@ -183,15 +183,15 @@
 <script>
 const ENV_ID = "tiaoji-9gigtefh6be473ff";
 const ADMIN_PASSWORD = "admin2024";
-const app = cloudbase.init({ env: ENV_ID });
-let db = null, allRecords = [], filteredRecords = [];
+let app = null, db = null, allRecords = [], filteredRecords = [];
 let activeIndex = -1, pendingDeleteId = null, curOpenMenu = -1;
 
 async function doLogin() {
   const pwd = document.getElementById('pwdInput').value;
   if (pwd !== ADMIN_PASSWORD) { showErr('loginErr','密码错误，请重试'); return; }
   try {
-    await app.auth().signInAnonymously();
+    app = cloudbase.init({ env: ENV_ID });
+    await app.auth({ persistence: 'session' }).signInAnonymously();
     db = app.database();
     document.getElementById('loginPage').style.display = 'none';
     document.getElementById('adminPage').style.display = 'block';

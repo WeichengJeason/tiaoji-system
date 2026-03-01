@@ -203,12 +203,16 @@ function logout() { document.getElementById('adminPage').style.display='none'; d
 
 async function loadData() {
   document.getElementById('listPanel').innerHTML = '<div class="list-empty"><div class="ei">⏳</div><div>加载中...</div></div>';
+  const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('请求超时，请检查数据库权限设置或刷新重试')), 10000));
   try {
     let all = [];
-    const { total } = await db.collection('submissions').count();
-    for (let i = 0; i < Math.ceil(total/100)||1; i++) {
-      const { data } = await db.collection('submissions').orderBy('submittedAt','desc').skip(i*100).limit(100).get();
+    let skip = 0;
+    while (true) {
+      const req = db.collection('submissions').orderBy('submittedAt','desc').skip(skip).limit(100).get();
+      const { data } = await Promise.race([req, timeout]);
       all = all.concat(data);
+      if (data.length < 100) break;
+      skip += 100;
     }
     allRecords = all; filteredRecords = [...all];
     renderStats(); doSearch();

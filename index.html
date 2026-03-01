@@ -3,437 +3,156 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>香蕉教育 · 调剂信息后台管理</title>
-<script src="https://cdn.jsdelivr.net/npm/@cloudbase/js-sdk@2.25.7/dist/index.browser.min.js"></script>
+<title>调剂意向采集表</title>
+<script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #f8f2e8; min-height: 100vh; }
-  .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #2d2416, #5c4422); }
-  .login-card { background: #fff; border-radius: 16px; padding: 40px 36px; width: 320px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center; }
-  .login-card .icon { font-size: 40px; margin-bottom: 12px; }
-  .login-card h2 { font-size: 18px; color: #2d2416; margin-bottom: 24px; }
-  .login-card input { width: 100%; padding: 11px 14px; border: 1.5px solid #e2d9c8; border-radius: 8px; font-size: 14px; margin-bottom: 12px; outline: none; font-family: inherit; }
-  .login-card input:focus { border-color: #c8a96e; }
-  .login-btn { width: 100%; padding: 12px; background: linear-gradient(135deg, #c8a96e, #a07840); color: #fff; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-family: inherit; font-weight: 600; }
-  .login-err { color: #c0392b; font-size: 13px; margin-bottom: 8px; }
-  .login-hint { margin-top: 14px; font-size: 12px; color: #a08060; }
-  .top-bar { background: linear-gradient(135deg, #2d2416, #5c4422); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-  .top-bar .left .tag { font-size: 10px; letter-spacing: 3px; color: #c8a96e; }
-  .top-bar .left h1 { font-size: 17px; color: #fff; font-weight: 600; }
-  .top-bar .right { display: flex; align-items: center; gap: 8px; }
-  .top-btn { padding: 7px 14px; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: inherit; font-weight: 500; }
-  .btn-gold { background: #c8a96e; color: #fff; }
-  .btn-green { background: #27ae60; color: #fff; }
-  .btn-gray { background: #95a5a6; color: #fff; }
-  .stats-bar { display: flex; gap: 10px; padding: 12px 16px; background: #fff; border-bottom: 1px solid #ede5d5; flex-wrap: wrap; }
-  .stat-item { flex: 1; min-width: 80px; background: #fffbf5; border: 1px solid #f0e8d5; border-radius: 10px; padding: 8px 12px; text-align: center; }
-  .stat-item .num { font-size: 20px; font-weight: 700; color: #c8a96e; }
-  .stat-item .lbl { font-size: 10px; color: #a08060; margin-top: 2px; }
-  .search-bar { padding: 10px 16px; background: #fff; border-bottom: 1px solid #ede5d5; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .search-bar input { flex: 1; min-width: 140px; padding: 8px 12px; border: 1.5px solid #e2d9c8; border-radius: 8px; font-size: 13px; outline: none; font-family: inherit; background: #fffdf9; }
-  .search-bar input:focus { border-color: #c8a96e; }
-  .search-bar select { padding: 8px 10px; border: 1.5px solid #e2d9c8; border-radius: 8px; font-size: 13px; outline: none; font-family: inherit; background: #fffdf9; cursor: pointer; }
-  .clear-btn { padding: 7px 12px; background: #ecf0f1; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; color: #7f8c8d; }
-  .main { display: flex; height: calc(100vh - 172px); }
-  .list-panel { width: 300px; flex-shrink: 0; overflow-y: auto; border-right: 1px solid #e8dcc8; background: #fff; }
-  .list-empty { padding: 50px 20px; text-align: center; color: #a08060; }
-  .list-empty .ei { font-size: 36px; margin-bottom: 10px; }
-
-  /* 列表项 */
-  .list-item { padding: 10px 10px 10px 8px; border-bottom: 1px solid #f0e8d5; cursor: pointer; transition: background 0.15s; display: flex; gap: 6px; align-items: flex-start; position: relative; }
-  .list-item:hover { background: #fffbf5; }
-  .list-item.active { background: #fff8ee; border-left: 3px solid #c8a96e; }
-
-  /* 标记圆点 */
-  .tag-col { flex-shrink: 0; padding-top: 4px; position: relative; }
-  .tag-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid #ddd; background: #fff; cursor: pointer; transition: all 0.15s; display: block; }
-  .tag-dot:hover { transform: scale(1.3); }
-  .tag-dot.dot-green { background: #27ae60; border-color: #27ae60; }
-  .tag-dot.dot-orange { background: #f39c12; border-color: #f39c12; }
-  .tag-dot.dot-red { background: #e74c3c; border-color: #e74c3c; }
-  .tag-menu { position: absolute; left: 16px; top: 0; background: #fff; border: 1px solid #e8dcc8; border-radius: 10px; padding: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); z-index: 50; display: none; flex-direction: column; gap: 2px; min-width: 110px; }
-  .tag-menu.open { display: flex; }
-  .tag-opt { padding: 6px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
-  .tag-opt:hover { background: #f8f2e8; }
-  .tag-opt .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-
-  .list-content { flex: 1; min-width: 0; }
-  .list-top { display: flex; justify-content: space-between; margin-bottom: 2px; align-items: center; gap: 4px; }
-  .item-name { font-size: 14px; font-weight: 700; color: #2d2416; }
-  .item-score { font-size: 12px; color: #c8a96e; font-weight: 600; flex-shrink: 0; }
-  .status-badge { font-size: 10px; padding: 1px 5px; border-radius: 8px; font-weight: 500; white-space: nowrap; }
-  .badge-green { background: #eafaf1; color: #27ae60; }
-  .badge-orange { background: #fef9e7; color: #f39c12; }
-  .badge-red { background: #fdecea; color: #e74c3c; }
-  .item-time { font-size: 11px; color: #b0a090; }
-  .item-school { font-size: 11px; color: #8b7355; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .item-target { font-size: 11px; color: #a07840; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .del-btn { position: absolute; right: 6px; bottom: 6px; background: #fdecea; border: none; border-radius: 5px; padding: 2px 7px; font-size: 11px; color: #e74c3c; cursor: pointer; display: none; }
-  .list-item:hover .del-btn { display: block; }
-
-  /* 详情 */
-  .detail-panel { flex: 1; overflow-y: auto; padding: 20px 24px; background: #fafaf7; }
-  .detail-empty { display: flex; align-items: center; justify-content: center; height: 100%; color: #b09070; font-size: 14px; flex-direction: column; gap: 10px; }
-  .detail-empty .de-icon { font-size: 40px; }
-  .detail-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
-  .detail-header h2 { font-size: 17px; color: #2d2416; }
-  .detail-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-  .action-btn { padding: 6px 14px; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; font-family: inherit; font-weight: 500; }
-  .btn-blue { background: #ebf5fb; color: #2980b9; }
-  .btn-blue:hover { background: #2980b9; color: #fff; }
-  .btn-red { background: #fdecea; color: #e74c3c; }
-  .btn-red:hover { background: #e74c3c; color: #fff; }
-  .close-btn { background: #ecf0f1; color: #7f8c8d; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; font-size: 13px; }
-
-  /* 状态选择器 */
-  .status-bar { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; padding: 10px 12px; background: #fffbf5; border-radius: 10px; border: 1px solid #f0e8d5; flex-wrap: wrap; }
-  .status-bar span.lbl { font-size: 12px; color: #8b7355; }
-  .s-opt { padding: 4px 12px; border-radius: 12px; font-size: 12px; cursor: pointer; border: 1.5px solid #ddd; font-weight: 500; background: #f5f5f5; color: #999; transition: all 0.15s; }
-  .s-opt.active-none { background: #eee; border-color: #aaa; color: #555; }
-  .s-opt.active-contacted { background: #27ae60; border-color: #27ae60; color: #fff; }
-  .s-opt.active-pending { background: #f39c12; border-color: #f39c12; color: #fff; }
-  .s-opt.active-rejected { background: #e74c3c; border-color: #e74c3c; color: #fff; }
-
-  .section-label { font-size: 10px; color: #c8a96e; letter-spacing: 2px; margin: 14px 0 6px; padding-bottom: 4px; border-bottom: 1px solid #f0e8d5; }
-  .row-item { display: flex; padding: 7px 0; border-bottom: 1px solid #f5ede0; align-items: flex-start; }
-  .row-item .lbl { width: 120px; flex-shrink: 0; font-size: 12px; color: #8b7355; padding-top: 2px; }
-  .row-item .val { font-size: 12px; color: #2d2416; font-weight: 500; flex: 1; }
-  .row-item input, .row-item select, .row-item textarea { width: 100%; padding: 5px 8px; border: 1.5px solid #e2d9c8; border-radius: 6px; font-size: 12px; font-family: inherit; outline: none; background: #fffdf9; }
-  .row-item input:focus, .row-item select:focus, .row-item textarea:focus { border-color: #c8a96e; }
-  .row-item textarea { height: 60px; resize: vertical; }
-  .save-bar { margin-top: 16px; display: flex; gap: 10px; }
-  .save-btn { padding: 9px 24px; background: linear-gradient(135deg, #c8a96e, #a07840); color: #fff; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: inherit; font-weight: 600; }
-  .cancel-btn2 { padding: 9px 20px; background: #ecf0f1; color: #7f8c8d; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: inherit; }
-
-  /* 弹窗 */
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; align-items: center; justify-content: center; }
-  .modal-overlay.show { display: flex; }
-  .modal { background: #fff; border-radius: 14px; padding: 28px 28px 22px; width: 300px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
-  .modal .m-icon { font-size: 36px; margin-bottom: 10px; }
-  .modal h3 { font-size: 16px; color: #2d2416; margin-bottom: 8px; }
-  .modal p { font-size: 13px; color: #888; margin-bottom: 20px; }
-  .modal-btns { display: flex; gap: 10px; }
-  .modal-btns button { flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-family: inherit; font-weight: 600; }
-  .btn-cancel-m { background: #ecf0f1; color: #7f8c8d; }
-  .btn-confirm-del { background: #e74c3c; color: #fff; }
-  @media(max-width:700px) { .main { flex-direction: column; height: auto; } .list-panel { width: 100%; max-height: 45vh; } .detail-panel { min-height: 50vh; } }
+  body { min-height: 100vh; background: linear-gradient(135deg, #fdf6ec 0%, #f0e6d3 100%); font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; padding: 30px 16px; }
+  .container { max-width: 580px; margin: 0 auto; }
+  .header { text-align: center; margin-bottom: 28px; }
+  .header .subtitle { font-size: 11px; letter-spacing: 4px; color: #c8a96e; margin-bottom: 8px; text-transform: uppercase; }
+  .header h1 { font-size: 26px; font-weight: 700; color: #2d2416; margin-bottom: 6px; }
+  .header .desc { font-size: 13px; color: #c8a96e; font-weight: 600; margin-bottom: 4px; }
+  .header p { font-size: 12px; color: #a08060; }
+  .card { background: #fff; border-radius: 16px; padding: 32px 28px; box-shadow: 0 8px 40px rgba(180,140,80,0.12); border: 1px solid #f0e8d5; }
+  .section-title { font-size: 11px; font-weight: 700; color: #c8a96e; letter-spacing: 3px; text-transform: uppercase; margin: 24px 0 14px; padding-bottom: 6px; border-bottom: 1px solid #f0e8d5; }
+  .row { display: grid; gap: 14px; margin-bottom: 14px; }
+  .row-2 { grid-template-columns: 1fr 1fr; }
+  .row-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  label { font-size: 12px; color: #8b7355; font-weight: 500; }
+  input, select, textarea { padding: 10px 12px; border: 1.5px solid #e2d9c8; border-radius: 8px; font-size: 14px; background: #fffdf9; color: #2d2416; outline: none; width: 100%; font-family: inherit; transition: border-color 0.2s; }
+  input:focus, select:focus, textarea:focus { border-color: #c8a96e; }
+  textarea { height: 80px; resize: vertical; }
+  .required::after { content: " *"; color: #e74c3c; }
+  .btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #c8a96e, #a07840); color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; letter-spacing: 1px; margin-top: 8px; }
+  .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .error { color: #c0392b; font-size: 13px; padding: 8px 12px; background: #fdf0ee; border-radius: 6px; margin-bottom: 12px; }
+  .footer-note { text-align: center; margin-top: 14px; font-size: 12px; color: #b09070; }
+  .success { text-align: center; padding: 60px 20px; }
+  .success .icon { font-size: 64px; margin-bottom: 20px; }
+  .success h2 { font-size: 24px; color: #2d2416; margin-bottom: 10px; }
+  .success p { color: #8b7355; font-size: 14px; }
+  @media(max-width:480px) { .row-2, .row-3 { grid-template-columns: 1fr; } .card { padding: 20px 16px; } }
 </style>
 </head>
 <body>
-
-<div class="login-wrap" id="loginPage">
-  <div class="login-card">
-    <div class="icon">🔐</div>
-    <h2>后台管理登录</h2>
-    <div id="loginErr" class="login-err" style="display:none"></div>
-    <input type="password" id="pwdInput" placeholder="请输入管理密码" onkeydown="if(event.key==='Enter')doLogin()">
-    <button class="login-btn" onclick="doLogin()">登 录</button>
-    <div class="login-hint">默认密码：admin2024</div>
+<div class="container">
+  <div class="header">
+    <div class="subtitle">Graduate Application</div>
+    <h1>调剂意向采集表</h1>
+    <div class="desc">香蕉教育 · 保姆班 / 保过班学员填写</div>
+    <p>请如实填写以下信息，提交后由老师统一查看</p>
   </div>
-</div>
 
-<div id="adminPage" style="display:none">
-  <div class="top-bar">
-    <div class="left"><div class="tag">香蕉教育 · ADMIN DASHBOARD</div><h1>调剂信息后台管理</h1></div>
-    <div class="right">
-      <button class="top-btn btn-green" onclick="exportCSV()">📥 导出Excel</button>
-      <button class="top-btn btn-gold" onclick="loadData()">🔄 刷新</button>
-      <button class="top-btn btn-gray" onclick="logout()">退出</button>
+  <div class="card" id="formCard">
+    <div class="section-title">基本信息</div>
+    <div class="row row-2">
+      <div class="field"><label class="required">考生姓名</label><input id="name" placeholder="请输入姓名"></div>
+      <div class="field"><label class="required">联系电话</label><input id="phone" placeholder="请输入手机号" type="tel"></div>
     </div>
-  </div>
-  <div class="stats-bar">
-    <div class="stat-item"><div class="num" id="statTotal">0</div><div class="lbl">总记录数</div></div>
-    <div class="stat-item"><div class="num" id="statAvg">—</div><div class="lbl">平均总分</div></div>
-    <div class="stat-item"><div class="num" id="statMax">—</div><div class="lbl">最高分</div></div>
-    <div class="stat-item"><div class="num" id="statContacted">0</div><div class="lbl">✅ 已沟通</div></div>
-    <div class="stat-item"><div class="num" id="statPending">0</div><div class="lbl">⏳ 跟进中</div></div>
-    <div class="stat-item"><div class="num" id="statToday">0</div><div class="lbl">今日新增</div></div>
-  </div>
-  <div class="search-bar">
-    <input id="searchInput" placeholder="🔍 搜索姓名、学校、专业、电话..." oninput="doSearch()">
-    <select id="filterDegree" onchange="doSearch()"><option value="">全部学历</option><option>本科</option><option>专科</option></select>
-    <select id="filterCategory" onchange="doSearch()"><option value="">全部类型</option><option>专硕</option><option>学硕</option></select>
-    <select id="filterStatus" onchange="doSearch()">
-      <option value="">全部状态</option>
-      <option value="none">⬜ 未处理</option>
-      <option value="contacted">✅ 已沟通</option>
-      <option value="pending">⏳ 跟进中</option>
-      <option value="rejected">❌ 不合适</option>
-    </select>
-    <button class="clear-btn" onclick="clearSearch()">清除</button>
-    <span style="font-size:12px;color:#a08060" id="searchCount"></span>
-  </div>
-  <div class="main">
-    <div class="list-panel" id="listPanel"><div class="list-empty"><div class="ei">⏳</div><div>加载中...</div></div></div>
-    <div class="detail-panel" id="detailPanel"><div class="detail-empty"><div class="de-icon">👈</div><div>点击左侧记录查看详情</div></div></div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="delModal">
-  <div class="modal">
-    <div class="m-icon">🗑️</div><h3>确认删除</h3>
-    <p id="delModalText">确定要删除这条记录吗？</p>
-    <div class="modal-btns">
-      <button class="btn-cancel-m" onclick="closeDelModal()">取消</button>
-      <button class="btn-confirm-del" onclick="confirmDelete()">确认删除</button>
+    <div class="row row-2">
+      <div class="field"><label>本/专科学校</label><input id="undergradSchool" placeholder="如：河南中医药大学"></div>
+      <div class="field"><label>本/专科专业</label><input id="undergradMajor" placeholder="如：中西医临床医学"></div>
     </div>
+    <div class="row row-2">
+      <div class="field"><label>学历类型</label><select id="degreeType"><option>本科</option><option>专科</option></select></div>
+      <div class="field"><label>外语类型</label><select id="examType"><option>英语一</option><option>英语二</option><option>日语</option><option>俄语</option><option>其他</option></select></div>
+    </div>
+
+    <div class="section-title">考研成绩</div>
+    <div class="row row-3">
+      <div class="field"><label class="required">总分</label><input id="totalScore" placeholder="如：336" type="number"></div>
+      <div class="field"><label>政治</label><input id="politics" placeholder="如：52" type="number"></div>
+      <div class="field"><label>外语</label><input id="english" placeholder="如：48" type="number"></div>
+    </div>
+    <div class="row row-2">
+      <div class="field"><label>业务课一名称</label><input id="course1Name" placeholder="如：中医综合（307）"></div>
+      <div class="field"><label>业务课一分数</label><input id="course1Score" placeholder="如：236" type="number"></div>
+    </div>
+    <div class="row row-2">
+      <div class="field"><label>业务课二名称</label><input id="course2Name" placeholder="选填"></div>
+      <div class="field"><label>业务课二分数</label><input id="course2Score" placeholder="选填" type="number"></div>
+    </div>
+
+    <div class="section-title">报考信息</div>
+    <div class="field" style="margin-bottom:14px"><label>报考院校</label><input id="targetSchool" placeholder="如：南京中医药大学"></div>
+    <div class="field" style="margin-bottom:14px"><label>报考专业</label><input id="targetMajor" placeholder="如：中医妇科（常州市中医院）"></div>
+    <div class="row row-3">
+      <div class="field"><label>专业代码</label><input id="targetCode" placeholder="如：105704"></div>
+      <div class="field"><label>学硕/专硕</label><select id="degreeCategory"><option>专硕</option><option>学硕</option></select></div>
+      <div class="field"><label>接受非全日制</label><select id="acceptPartTime"><option>否</option><option>是</option></select></div>
+    </div>
+    <div class="field" style="margin-top:14px">
+      <label>调剂意向</label>
+      <textarea id="notes" placeholder="请写下你的调剂意向，如：意向地区、院校层次等"></textarea>
+    </div>
+
+    <div id="errorMsg" class="error" style="display:none"></div>
+    <button class="btn" id="submitBtn" onclick="submitForm()">提交调剂信息</button>
   </div>
+
+  <div class="success" id="successCard" style="display:none">
+    <div class="icon">✅</div>
+    <h2>提交成功！</h2>
+    <p>老师已收到您的调剂信息，请耐心等待联系。</p>
+  </div>
+  <div class="footer-note">您的信息仅供老师查阅，不会公开展示</div>
 </div>
 
 <script>
 const ENV_ID = "tiaoji-9gigtefh6be473ff";
-const ADMIN_PASSWORD = "admin2024";
-let app = null, db = null, allRecords = [], filteredRecords = [];
-let activeIndex = -1, pendingDeleteId = null, curOpenMenu = -1;
+let app = null;
 
-async function doLogin() {
-  const pwd = document.getElementById('pwdInput').value;
-  if (pwd !== ADMIN_PASSWORD) { showErr('loginErr','密码错误，请重试'); return; }
+function v(id) { return document.getElementById(id).value.trim(); }
+
+async function submitForm() {
+  const name = v('name'), phone = v('phone'), totalScore = v('totalScore');
+  if (!name || !phone || !totalScore) {
+    const err = document.getElementById('errorMsg');
+    err.textContent = '请填写姓名、联系电话和总分';
+    err.style.display = 'block';
+    return;
+  }
+  document.getElementById('errorMsg').style.display = 'none';
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = '提交中...';
+
   try {
+    // 初始化并匿名登录
     app = cloudbase.init({ env: ENV_ID });
     await app.auth({ persistence: 'session' }).signInAnonymously();
-    db = app.database();
-    document.getElementById('loginPage').style.display = 'none';
-    document.getElementById('adminPage').style.display = 'block';
-    loadData();
-  } catch(e) { showErr('loginErr','登录失败：'+e.message); }
-}
-function showErr(id, msg) { const el=document.getElementById(id); el.textContent=msg; el.style.display='block'; }
-function logout() { document.getElementById('adminPage').style.display='none'; document.getElementById('loginPage').style.display='flex'; document.getElementById('pwdInput').value=''; }
-
-async function loadData() {
-  document.getElementById('listPanel').innerHTML = '<div class="list-empty"><div class="ei">⏳</div><div>加载中...</div></div>';
-  try {
-    let all = [];
-    const { total } = await db.collection('submissions').count();
-    for (let i = 0; i < Math.ceil(total/100)||1; i++) {
-      const { data } = await db.collection('submissions').orderBy('submittedAt','desc').skip(i*100).limit(100).get();
-      all = all.concat(data);
-    }
-    allRecords = all; filteredRecords = [...all];
-    renderStats(); doSearch();
+    const db = app.database();
+    await db.collection('submissions').add({
+      name, phone,
+      examType: v('examType'),
+      undergradSchool: v('undergradSchool'),
+      undergradMajor: v('undergradMajor'),
+      degreeType: v('degreeType'),
+      totalScore,
+      politics: v('politics'),
+      english: v('english'),
+      course1Name: v('course1Name'),
+      course1Score: v('course1Score'),
+      course2Name: v('course2Name'),
+      course2Score: v('course2Score'),
+      targetSchool: v('targetSchool'),
+      targetMajor: v('targetMajor'),
+      targetCode: v('targetCode'),
+      degreeCategory: v('degreeCategory'),
+      acceptPartTime: v('acceptPartTime'),
+      notes: v('notes'),
+      submittedAt: new Date().toLocaleString('zh-CN')
+    });
+    document.getElementById('formCard').style.display = 'none';
+    document.getElementById('successCard').style.display = 'block';
   } catch(e) {
-    document.getElementById('listPanel').innerHTML = `<div class="list-empty"><div class="ei">❌</div><div>${e.message}</div></div>`;
+    const errEl = document.getElementById('errorMsg');
+    errEl.textContent = '提交失败，请重试：' + e.message;
+    errEl.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = '提交调剂信息';
   }
-}
-
-function renderStats() {
-  const scores = allRecords.map(r=>parseFloat(r.totalScore)).filter(n=>!isNaN(n));
-  document.getElementById('statTotal').textContent = allRecords.length;
-  document.getElementById('statAvg').textContent = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) : '—';
-  document.getElementById('statMax').textContent = scores.length ? Math.max(...scores) : '—';
-  document.getElementById('statContacted').textContent = allRecords.filter(r=>r.status==='contacted').length;
-  document.getElementById('statPending').textContent = allRecords.filter(r=>r.status==='pending').length;
-  const today = new Date().toLocaleDateString('zh-CN');
-  document.getElementById('statToday').textContent = allRecords.filter(r=>r.submittedAt&&r.submittedAt.startsWith(today)).length;
-}
-
-function doSearch() {
-  const kw = document.getElementById('searchInput').value.trim().toLowerCase();
-  const deg = document.getElementById('filterDegree').value;
-  const cat = document.getElementById('filterCategory').value;
-  const st  = document.getElementById('filterStatus').value;
-  filteredRecords = allRecords.filter(r => {
-    const mkw = !kw || [r.name,r.phone,r.undergradSchool,r.undergradMajor,r.targetSchool,r.targetMajor].some(v=>v&&v.toLowerCase().includes(kw));
-    const mst = !st || (st==='none' ? (!r.status||r.status==='none') : r.status===st);
-    return mkw && (!deg||r.degreeType===deg) && (!cat||r.degreeCategory===cat) && mst;
-  });
-  activeIndex = -1;
-  document.getElementById('searchCount').textContent = (kw||deg||cat||st)?`找到 ${filteredRecords.length} 条`:'';
-  renderList();
-  document.getElementById('detailPanel').innerHTML = '<div class="detail-empty"><div class="de-icon">👈</div><div>点击左侧记录查看详情</div></div>';
-}
-
-function clearSearch() {
-  document.getElementById('searchInput').value='';
-  ['filterDegree','filterCategory','filterStatus'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('searchCount').textContent='';
-  filteredRecords=[...allRecords]; activeIndex=-1; renderList();
-  document.getElementById('detailPanel').innerHTML='<div class="detail-empty"><div class="de-icon">👈</div><div>点击左侧记录查看详情</div></div>';
-}
-
-const DOT_CLS = { contacted:'dot-green', pending:'dot-orange', rejected:'dot-red' };
-const BADGE = {
-  contacted: '<span class="status-badge badge-green">已沟通</span>',
-  pending:   '<span class="status-badge badge-orange">跟进中</span>',
-  rejected:  '<span class="status-badge badge-red">不合适</span>',
-};
-
-function renderList() {
-  if (!filteredRecords.length) { document.getElementById('listPanel').innerHTML='<div class="list-empty"><div class="ei">📭</div><div>暂无记录</div></div>'; return; }
-  document.getElementById('listPanel').innerHTML = filteredRecords.map((r,i) => {
-    const st = r.status||'none';
-    const dotCls = DOT_CLS[st]||'';
-    const badge = BADGE[st]||'';
-    return `<div class="list-item ${i===activeIndex?'active':''}" onclick="onItemClick(event,${i})">
-      <div class="tag-col">
-        <span class="tag-dot ${dotCls}" onclick="openMenu(event,${i})" title="标记状态"></span>
-        <div class="tag-menu" id="tm${i}">
-          <div class="tag-opt" onclick="setStatus(event,${i},'none')"><span class="dot" style="background:#ccc"></span>未处理</div>
-          <div class="tag-opt" onclick="setStatus(event,${i},'contacted')"><span class="dot" style="background:#27ae60"></span>✅ 已沟通</div>
-          <div class="tag-opt" onclick="setStatus(event,${i},'pending')"><span class="dot" style="background:#f39c12"></span>⏳ 跟进中</div>
-          <div class="tag-opt" onclick="setStatus(event,${i},'rejected')"><span class="dot" style="background:#e74c3c"></span>❌ 不合适</div>
-        </div>
-      </div>
-      <div class="list-content">
-        <div class="list-top">
-          <span class="item-name">${r.name||'—'}</span>${badge}
-          <span class="item-score">总分 ${r.totalScore||'—'}</span>
-        </div>
-        <div class="item-time">${r.submittedAt||''}</div>
-        <div class="item-school">${r.undergradSchool||''} · ${r.undergradMajor||''}</div>
-        <div class="item-target">报考：${r.targetSchool||''} ${r.targetMajor||''}</div>
-        <button class="del-btn" onclick="askDelete(event,'${r._id}','${(r.name||'').replace(/'/g,"\\'")}')">🗑️ 删除</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function onItemClick(e, i) { if (!e.target.closest('.tag-col')) showDetail(i); }
-
-function openMenu(e, i) {
-  e.stopPropagation();
-  if (curOpenMenu >= 0 && curOpenMenu !== i) { const m=document.getElementById('tm'+curOpenMenu); if(m) m.classList.remove('open'); }
-  const menu = document.getElementById('tm'+i);
-  menu.classList.toggle('open');
-  curOpenMenu = menu.classList.contains('open') ? i : -1;
-}
-document.addEventListener('click', () => { if (curOpenMenu>=0) { const m=document.getElementById('tm'+curOpenMenu); if(m) m.classList.remove('open'); curOpenMenu=-1; } });
-
-async function setStatus(e, i, status) {
-  e.stopPropagation();
-  const r = filteredRecords[i];
-  const menu = document.getElementById('tm'+i);
-  if (menu) menu.classList.remove('open');
-  curOpenMenu = -1;
-  try {
-    await db.collection('submissions').doc(r._id).update({ status });
-    const ai = allRecords.findIndex(x=>x._id===r._id);
-    if (ai>=0) allRecords[ai].status = status;
-    filteredRecords[i].status = status;
-    renderStats(); renderList();
-    if (activeIndex === i) showDetail(i);
-  } catch(e) { alert('标记失败：'+e.message); }
-}
-
-function statusBar(i) {
-  const st = (filteredRecords[i]||{}).status || 'none';
-  const opts = [
-    {v:'none',      label:'未处理'},
-    {v:'contacted', label:'✅ 已沟通'},
-    {v:'pending',   label:'⏳ 跟进中'},
-    {v:'rejected',  label:'❌ 不合适'},
-  ];
-  return `<div class="status-bar">
-    <span class="lbl">沟通状态：</span>
-    ${opts.map(o=>`<span class="s-opt ${st===o.v?'active-'+o.v:''}" onclick="setStatus(event,${i},'${o.v}')">${o.label}</span>`).join('')}
-  </div>`;
-}
-
-function showDetail(i) {
-  activeIndex = i; renderList();
-  const r = filteredRecords[i];
-  const row=(l,v)=>`<div class="row-item"><span class="lbl">${l}</span><span class="val">${v||'—'}</span></div>`;
-  const sec=t=>`<div class="section-label">── ${t}</div>`;
-  document.getElementById('detailPanel').innerHTML = `
-    <div class="detail-header">
-      <h2>📋 ${r.name} 的调剂信息</h2>
-      <div class="detail-actions">
-        <button class="action-btn btn-blue" onclick="enterEdit(${i})">✏️ 编辑</button>
-        <button class="action-btn btn-red" onclick="askDelete(event,'${r._id}','${(r.name||'').replace(/'/g,"\\'")}')">🗑️ 删除</button>
-        <button class="close-btn" onclick="closeDetail()">关闭</button>
-      </div>
-    </div>
-    ${statusBar(i)}
-    ${row('提交时间',r.submittedAt)}${row('联系电话',r.phone)}${row('学历类型',r.degreeType)}
-    ${row('本/专科学校',r.undergradSchool)}${row('本/专科专业',r.undergradMajor)}
-    ${sec('考研成绩')}${row('总分',r.totalScore)}${row('政治',r.politics)}
-    ${row('外语（'+(r.examType||'')+'）',r.english)}
-    ${row('业务课一',r.course1Name?(r.course1Name+(r.course1Score?'：'+r.course1Score+'分':'')):'')}
-    ${row('业务课二',r.course2Name?(r.course2Name+(r.course2Score?'：'+r.course2Score+'分':'')):'')}
-    ${sec('报考信息')}${row('报考院校',r.targetSchool)}${row('报考专业',r.targetMajor)}
-    ${row('专业代码',r.targetCode)}${row('学硕/专硕',r.degreeCategory)}
-    ${row('接受非全日制',r.acceptPartTime)}${row('调剂意向',r.notes)}`;
-}
-
-function enterEdit(i) {
-  const r = filteredRecords[i];
-  const inp=(id,v,t='text')=>`<input id="e_${id}" value="${(v||'').replace(/"/g,'&quot;')}" type="${t}">`;
-  const sel=(id,v,opts)=>`<select id="e_${id}">${opts.map(o=>`<option ${o===v?'selected':''}>${o}</option>`).join('')}</select>`;
-  const ta=(id,v)=>`<textarea id="e_${id}">${v||''}</textarea>`;
-  const row=(l,c)=>`<div class="row-item"><span class="lbl">${l}</span><span class="val">${c}</span></div>`;
-  const sec=t=>`<div class="section-label">── ${t}</div>`;
-  document.getElementById('detailPanel').innerHTML = `
-    <div class="detail-header">
-      <h2>✏️ 编辑 ${r.name} 的信息</h2>
-      <div class="detail-actions"><button class="close-btn" onclick="showDetail(${i})">取消</button></div>
-    </div>
-    ${statusBar(i)}
-    ${row('考生姓名',inp('name',r.name))}${row('联系电话',inp('phone',r.phone))}
-    ${row('学历类型',sel('degreeType',r.degreeType,['本科','专科']))}
-    ${row('本/专科学校',inp('undergradSchool',r.undergradSchool))}
-    ${row('本/专科专业',inp('undergradMajor',r.undergradMajor))}
-    ${sec('考研成绩')}
-    ${row('总分',inp('totalScore',r.totalScore,'number'))}${row('政治',inp('politics',r.politics,'number'))}
-    ${row('外语类型',sel('examType',r.examType,['英语一','英语二','日语','俄语','其他']))}
-    ${row('外语分数',inp('english',r.english,'number'))}
-    ${row('业务课一名称',inp('course1Name',r.course1Name))}${row('业务课一分数',inp('course1Score',r.course1Score,'number'))}
-    ${row('业务课二名称',inp('course2Name',r.course2Name))}${row('业务课二分数',inp('course2Score',r.course2Score,'number'))}
-    ${sec('报考信息')}
-    ${row('报考院校',inp('targetSchool',r.targetSchool))}${row('报考专业',inp('targetMajor',r.targetMajor))}
-    ${row('专业代码',inp('targetCode',r.targetCode))}
-    ${row('学硕/专硕',sel('degreeCategory',r.degreeCategory,['专硕','学硕']))}
-    ${row('接受非全日制',sel('acceptPartTime',r.acceptPartTime,['否','是']))}
-    ${row('调剂意向',ta('notes',r.notes))}
-    <div class="save-bar">
-      <button class="save-btn" onclick="saveEdit('${r._id}',${i})">💾 保存修改</button>
-      <button class="cancel-btn2" onclick="showDetail(${i})">取消</button>
-    </div>`;
-}
-
-function gv(id) { const el=document.getElementById('e_'+id); return el?el.value.trim():''; }
-
-async function saveEdit(docId, i) {
-  const u = {
-    name:gv('name'),phone:gv('phone'),degreeType:gv('degreeType'),
-    undergradSchool:gv('undergradSchool'),undergradMajor:gv('undergradMajor'),
-    examType:gv('examType'),totalScore:gv('totalScore'),politics:gv('politics'),english:gv('english'),
-    course1Name:gv('course1Name'),course1Score:gv('course1Score'),
-    course2Name:gv('course2Name'),course2Score:gv('course2Score'),
-    targetSchool:gv('targetSchool'),targetMajor:gv('targetMajor'),targetCode:gv('targetCode'),
-    degreeCategory:gv('degreeCategory'),acceptPartTime:gv('acceptPartTime'),notes:gv('notes'),
-  };
-  try {
-    await db.collection('submissions').doc(docId).update(u);
-    const ai=allRecords.findIndex(x=>x._id===docId);
-    if(ai>=0) Object.assign(allRecords[ai],u);
-    Object.assign(filteredRecords[i],u);
-    renderStats(); renderList(); showDetail(i);
-    const tip=document.createElement('div');
-    tip.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#27ae60;color:#fff;padding:10px 24px;border-radius:20px;font-size:14px;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.2)';
-    tip.textContent='✅ 保存成功！'; document.body.appendChild(tip); setTimeout(()=>tip.remove(),2000);
-  } catch(e) { alert('保存失败：'+e.message); }
-}
-
-function closeDetail() { activeIndex=-1; renderList(); document.getElementById('detailPanel').innerHTML='<div class="detail-empty"><div class="de-icon">👈</div><div>点击左侧记录查看详情</div></div>'; }
-
-function askDelete(e, id, name) { e.stopPropagation(); pendingDeleteId=id; document.getElementById('delModalText').textContent=`确定要删除「${name}」的记录吗？此操作不可撤销。`; document.getElementById('delModal').classList.add('show'); }
-function closeDelModal() { pendingDeleteId=null; document.getElementById('delModal').classList.remove('show'); }
-async function confirmDelete() {
-  if (!pendingDeleteId) return;
-  try { await db.collection('submissions').doc(pendingDeleteId).remove(); closeDelModal(); closeDetail(); await loadData(); }
-  catch(e) { alert('删除失败：'+e.message); }
-}
-
-function exportCSV() {
-  if (!filteredRecords.length) { alert('暂无数据'); return; }
-  const headers=['姓名','电话','学历','本科学校','本科专业','外语类型','总分','政治','外语','业务课一','业务课一分数','业务课二','业务课二分数','报考院校','报考专业','专业代码','学硕专硕','非全日制','调剂意向','沟通状态','提交时间'];
-  const keys=['name','phone','degreeType','undergradSchool','undergradMajor','examType','totalScore','politics','english','course1Name','course1Score','course2Name','course2Score','targetSchool','targetMajor','targetCode','degreeCategory','acceptPartTime','notes','status','submittedAt'];
-  const sm={contacted:'已沟通',pending:'跟进中',rejected:'不合适',none:'未处理'};
-  const rows=filteredRecords.map(r=>keys.map(k=>{let v=r[k]||''; if(k==='status')v=sm[v]||'未处理'; return `"${String(v).replace(/"/g,'""')}"`; }).join(','));
-  const csv='\uFEFF'+headers.join(',')+'\n'+rows.join('\n');
-  const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
-  a.download='调剂信息_'+new Date().toLocaleDateString('zh-CN')+'.csv'; a.click();
 }
 </script>
 </body>
